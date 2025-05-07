@@ -7,5 +7,8 @@ clean:
 
 all: Colors.prg
 
-run: all
+vice: all
 	x64sc -autostartprgmode 1 -autostart ~mp/GitHub/Starting64/Colors/Colors.prg
+
+run: all
+	curl -F 'data=@./Colors.prg' 172.20.10.3/v1/runners:run_prg
