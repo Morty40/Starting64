@@ -17,17 +17,38 @@ start:
 _0:
 			; read joystick in port 1 and write to screen
 			jsr joystickReadPort1
+			
+			; write a, x, y to screen
+			clc
+			adc #ord('+')
 			sta SCREEN + 0
-			stx SCREEN + 1
-			sty SCREEN + 2
+			inx
+			lda _dxText,x
+			sta SCREEN + 1
+			iny
+			lda _dyText,y
+			sta SCREEN + 2
 						
 			; read joystick in port 2 and write to screen
 			jsr joystickReadPort2
+
+			; write a, x, y to screen
+			clc
+			adc #ord('+')
 			sta SCREEN + 4
-			stx SCREEN + 5
-			sty SCREEN + 6
-			
+			inx
+			lda _dxText,x
+			sta SCREEN + 5
+			iny
+			lda _dyText,y
+			sta SCREEN + 6
+
+			; loop			
 			jmp _0
+
+			.encoding ENCODING_SCREEN_UPPER
+_dxText:	.text "L+R"
+_dyText:	.text "U+D"
 
 ; Read joystick in port 1 or 2
 ; Return:
