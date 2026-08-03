@@ -1,3 +1,6 @@
+; Sprites.asm
+; Display 8 sprites on the screen
+; (c) Morten Perriartd 2026
 
 SCREEN 		= $0400
 
