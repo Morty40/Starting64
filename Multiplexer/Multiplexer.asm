@@ -66,6 +66,17 @@ _0:
 			
 			lda spriteColors,y
 			sta VIC_SPRITE0_COLOR,x
+
+			; TODO: optimize
+			lda $d010
+			and mask,x
+			sta $d010
+			lda spritePositionXHi,y
+			beq _00
+			lda $d010
+			ora bits,x
+			sta $d010
+_00:
 			
 			; multiply x*2
 			txa
@@ -73,7 +84,7 @@ _0:
 			tax
 
 			; set sprite position
-			lda spritePositionX,y
+			lda spritePositionXLo,y
 			sta VIC_SPRITE0_POSITION_X_LO,x
 			lda spritePositionY,y
 			sta VIC_SPRITE0_POSITION_Y,x
@@ -107,6 +118,9 @@ _1:
 			dec $d020
 			rti
 
+mask:		.byte $ff-1, $ff-2, $ff-4, $ff-8, $ff-16, $ff-32, $ff-64, $ff-128, 
+bits:		.byte 1, 2, 4, 8, 16, 32, 64, 128
+
 nextVirtualSpriteIndex:		.byte 0
 nextHardwareSpriteIndex:	.byte 0
 
@@ -131,12 +145,24 @@ _0:
 			lda spriteColors,y
 			sta VIC_SPRITE0_COLOR,x
 
+
+			; TODO: optimize
+			lda $d010
+			and mask,x
+			sta $d010
+			lda spritePositionXHi,y
+			beq _00
+			lda $d010
+			ora bits,x
+			sta $d010
+_00:
+
 			txa
 			asl
 			tax
 
 			; set sprite position
-			lda spritePositionX,y
+			lda spritePositionXLo,y
 			sta VIC_SPRITE0_POSITION_X_LO,x			
 			lda spritePositionY,y
 			sta VIC_SPRITE0_POSITION_Y,x
@@ -227,8 +253,11 @@ moveSprites:
 			ldx _frame			
 			ldy #0
 _0:
-			lda xSinTab,x
-			sta spritePositionX,y
+			lda xSinTabLo,x
+			sta spritePositionXLo,y
+
+			lda xSinTabHi,x
+			sta spritePositionXHi,y
 			
 			lda ySinTab,x
 			sta spritePositionY,y
@@ -297,14 +326,16 @@ _0:
 
 
 ; virtual sprite registers
-spritePositionX:	.bytefill SPRITE_COUNT
+spritePositionXLo:	.bytefill SPRITE_COUNT
+spritePositionXHi:	.bytefill SPRITE_COUNT
 spritePositionY:	.bytefill SPRITE_COUNT
 spritePointers:		.bytefill SPRITE_COUNT, "i: [vicSpritePointer(spriteImage1), vicSpritePointer(spriteImage2)][i&1]"
 spriteColors:		.bytefill SPRITE_COUNT, "i: [1, 2][i&1]"
 spriteOrder:		.bytefill SPRITE_COUNT, "i: i"
 
 			.align 256
-xSinTab:	.bytefill 256, "a: round(139.5 + 115.5 * cos(2*pi * a / 256))"
+xSinTabLo:	.bytefill 256, "a: lo(round(148+24 + 148 * cos(2*pi * a / 256)))"
+xSinTabHi:	.bytefill 256, "a: hi(round(148+24 + 148 * cos(2*pi * a / 256)))"
 
 			.align 256
 ySinTab:	.bytefill 256, "a: round(139.5 + 89.5 * sin(2*pi * a / 256))"
