@@ -58,36 +58,7 @@ irq1:
 			stx nextVirtualSpriteIndex
 			stx nextHardwareSpriteIndex
 _0:
-			ldy spriteOrder,x
-			ldx nextHardwareSpriteIndex
-			
-			lda spritePointers,y
-			sta SCREEN + VIC_SPRITE_POINTERS_OFFSET,x
-			
-			lda spriteColors,y
-			sta VIC_SPRITE0_COLOR,x
-
-			; TODO: optimize
-			lda $d010
-			and mask,x
-			sta $d010
-			lda spritePositionXHi,y
-			beq _00
-			lda $d010
-			ora bits,x
-			sta $d010
-_00:
-			
-			; multiply x*2
-			txa
-			asl
-			tax
-
-			; set sprite position
-			lda spritePositionXLo,y
-			sta VIC_SPRITE0_POSITION_X_LO,x
-			lda spritePositionY,y
-			sta VIC_SPRITE0_POSITION_Y,x
+			jsr processNextSprite
 
 			inc nextVirtualSpriteIndex
 
@@ -118,7 +89,7 @@ _1:
 			dec $d020
 			rti
 
-mask:		.byte $ff-1, $ff-2, $ff-4, $ff-8, $ff-16, $ff-32, $ff-64, $ff-128, 
+mask:		.byte $ff-1, $ff-2, $ff-4, $ff-8, $ff-16, $ff-32, $ff-64, $ff-128
 bits:		.byte 1, 2, 4, 8, 16, 32, 64, 128
 
 nextVirtualSpriteIndex:		.byte 0
@@ -133,39 +104,7 @@ irq2:
 			dec $d020
 			@pushAXY()
 _0:
-			ldx nextVirtualSpriteIndex
-
-			ldy spriteOrder,x
-			
-			ldx nextHardwareSpriteIndex
-			
-			lda spritePointers,y
-			sta SCREEN + VIC_SPRITE_POINTERS_OFFSET,x
-			
-			lda spriteColors,y
-			sta VIC_SPRITE0_COLOR,x
-
-
-			; TODO: optimize
-			lda $d010
-			and mask,x
-			sta $d010
-			lda spritePositionXHi,y
-			beq _00
-			lda $d010
-			ora bits,x
-			sta $d010
-_00:
-
-			txa
-			asl
-			tax
-
-			; set sprite position
-			lda spritePositionXLo,y
-			sta VIC_SPRITE0_POSITION_X_LO,x			
-			lda spritePositionY,y
-			sta VIC_SPRITE0_POSITION_Y,x
+			jsr processNextSprite
 			
 			; next hardware sprite index
 			ldx nextHardwareSpriteIndex
@@ -190,7 +129,6 @@ _1:
 			jmp _end
 
 _2:
-
 			; TODO: set raster for next sprite
 			lda nextHardwareSpriteIndex
 			asl
@@ -201,16 +139,12 @@ _2:
 			bcc _3
 			inx
 _3:
-			
-			
-;			ldx #0
-;			lda $d012
-;			clc
-;			adc #50
-_4:
+		
+_busyWait:
 			cmp $d012
-			bcs _4
+			bcs _busyWait
 			jmp _0
+			
 			;bpl _0
 			;jsr setRasterCounter
 
@@ -219,6 +153,43 @@ _end:
 			@pullYXA()
 			inc $d020
 			rti
+
+
+processNextSprite:
+			ldx nextVirtualSpriteIndex
+
+			ldy spriteOrder,x
+			
+			ldx nextHardwareSpriteIndex
+			
+			lda spritePointers,y
+			sta SCREEN + VIC_SPRITE_POINTERS_OFFSET,x
+			
+			lda spriteColors,y
+			sta VIC_SPRITE0_COLOR,x
+
+
+			; TODO: optimize
+			lda $d010
+			and mask,x
+			sta $d010
+			lda spritePositionXHi,y
+			beq _0
+			lda $d010
+			ora bits,x
+			sta $d010
+_0:
+
+			txa
+			asl
+			tax
+
+			; set sprite position
+			lda spritePositionXLo,y
+			sta VIC_SPRITE0_POSITION_X_LO,x			
+			lda spritePositionY,y
+			sta VIC_SPRITE0_POSITION_Y,x
+			rts
 
 
 setupSprites:
@@ -272,8 +243,8 @@ _0:
 			
 			inc _frame
 			rts
-_frame:		.byte 0			
-			
+_frame:		.byte 0
+
 ; simple bubble sort - not optimised
 sortSprites:
 			lda #0
