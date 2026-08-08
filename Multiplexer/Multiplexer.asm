@@ -4,7 +4,7 @@
 			
 SCREEN 		= $0400
 
-SPRITE_COUNT = 16
+SPRITE_COUNT = 20
 
 			; BASIC start
 			@basicStart()
@@ -55,20 +55,20 @@ irq1:
 			jsr sortSprites
 			
 			ldx #0
-			stx nextVirtualSpriteIndex
-			stx nextHardwareSpriteIndex
+			stx nextVirtualSprite
+			stx nextHardwareSprite
 _0:
-			jsr processNextSprite
+			jsr updateNextSprite
 
-			inc nextVirtualSpriteIndex
+			inc nextVirtualSprite
 
-			inc nextHardwareSpriteIndex
-			ldx nextHardwareSpriteIndex
+			inc nextHardwareSprite
+			ldx nextHardwareSprite
 			cpx #8
 			bne _0
 			
 			lda #0
-			sta nextHardwareSpriteIndex
+			sta nextHardwareSprite
 
 			; calculate raster line just below first hardware sprite
 			ldy spriteOrder
@@ -89,11 +89,8 @@ _1:
 			dec $d020
 			rti
 
-mask:		.byte $ff-1, $ff-2, $ff-4, $ff-8, $ff-16, $ff-32, $ff-64, $ff-128
-bits:		.byte 1, 2, 4, 8, 16, 32, 64, 128
-
-nextVirtualSpriteIndex:		.byte 0
-nextHardwareSpriteIndex:	.byte 0
+			.zpbyte "nextVirtualSprite"
+			.zpbyte "nextHardwareSprite"
 
 
 irq2:
@@ -104,20 +101,20 @@ irq2:
 			dec $d020
 			@pushAXY()
 _0:
-			jsr processNextSprite
+			jsr updateNextSprite
 			
 			; next hardware sprite index
-			ldx nextHardwareSpriteIndex
+			ldx nextHardwareSprite
 			inx
 			cpx #8
 			bne _1
 			ldx #0
 _1:
-			stx nextHardwareSpriteIndex
+			stx nextHardwareSprite
 
 			; next virtual sprite index
-			inc nextVirtualSpriteIndex
-			ldx nextVirtualSpriteIndex
+			inc nextVirtualSprite
+			ldx nextVirtualSprite
 			cpx #SPRITE_COUNT
 			bne _2			
 			
@@ -130,7 +127,7 @@ _1:
 
 _2:
 			; TODO: set raster for next sprite
-			lda nextHardwareSpriteIndex
+			lda nextHardwareSprite
 			asl
 			tax
 			lda VIC_SPRITE0_POSITION_Y,x
@@ -155,41 +152,44 @@ _end:
 			rti
 
 
-processNextSprite:
-			ldx nextVirtualSpriteIndex
-
+updateNextSprite:
+			; x = hardware sprite index
+			; y = virtual sprite index
+			ldx nextVirtualSprite
 			ldy spriteOrder,x
-			
-			ldx nextHardwareSpriteIndex
-			
+			ldx nextHardwareSprite
+
+			; set sprite image pointer			
 			lda spritePointers,y
 			sta SCREEN + VIC_SPRITE_POINTERS_OFFSET,x
 			
+			; set sprite color
 			lda spriteColors,y
 			sta VIC_SPRITE0_COLOR,x
 
-
-			; TODO: optimize
-			lda $d010
-			and mask,x
-			sta $d010
+			; set sprint x-position hi bit
+			lda VIC_SPRITES_POSITION_X_HI
+			and _mask,x
+			sta VIC_SPRITES_POSITION_X_HI
 			lda spritePositionXHi,y
 			beq _0
-			lda $d010
-			ora bits,x
-			sta $d010
+			lda VIC_SPRITES_POSITION_X_HI
+			ora _bit,x
+			sta VIC_SPRITES_POSITION_X_HI
 _0:
-
+			; multiply x*2
 			txa
 			asl
 			tax
 
-			; set sprite position
+			; set sprite x, y position
 			lda spritePositionXLo,y
 			sta VIC_SPRITE0_POSITION_X_LO,x			
 			lda spritePositionY,y
 			sta VIC_SPRITE0_POSITION_Y,x
 			rts
+_mask:		.byte $fe, $fd, $fb, $f7, $ef, $df, $bf, $7f
+_bit:		.byte $01, $02, $04, $08, $10, $20, $40, $80
 
 
 setupSprites:
@@ -244,6 +244,7 @@ _0:
 			inc _frame
 			rts
 _frame:		.byte 0
+
 
 ; simple bubble sort - not optimised
 sortSprites:
@@ -334,7 +335,6 @@ spriteImage1:
 			.bits "#                      #"
 			.bits "#                      #"
 			.bits "########################"
-
 
 			.align VIC_SPRITE_MEMORY_ALIGNMENT
 spriteImage2:
