@@ -4,7 +4,7 @@
 			
 SCREEN 		= $0400
 
-SPRITE_COUNT = 20
+SPRITE_COUNT = 10
 
 			; BASIC start
 			@basicStart()
@@ -51,24 +51,29 @@ irq1:
 			inc $d020
 			@pushAXY()
 
+			; setup virtual sprite positions and sort by y
 			jsr moveSprites
 			jsr sortSprites
 			
+			; reset sprite indices
 			ldx #0
 			stx nextVirtualSprite
 			stx nextHardwareSprite
+			
+			; do the first 8 sprites, no multiplexing yet
 _0:
 			jsr updateNextSprite
-
-			inc nextVirtualSprite
-
-			inc nextHardwareSprite
-			ldx nextHardwareSprite
-			cpx #8
-			bne _0
+			; (updates nextHardwareSprite)
 			
-			lda #0
-			sta nextHardwareSprite
+			; increment nextVirtualSprite
+			inc nextVirtualSprite
+			lda nextVirtualSprite
+			cmp #SPRITE_COUNT
+			beq _2
+			
+			; when nextHardwareSprite wraps around to zero, all hw sprites are used
+			lda nextHardwareSprite
+			bne _0
 
 			; calculate raster line just below first hardware sprite
 			ldy spriteOrder
@@ -83,7 +88,7 @@ _1:
 			jsr setRasterCounter
 			@ldax(irq2)
 			@stax(INTERRUPT_VECTOR_IRQ)
-
+_2:
 			; pull registers from stack
 			@pullYXA()
 			dec $d020
@@ -103,15 +108,6 @@ irq2:
 _0:
 			jsr updateNextSprite
 			
-			; next hardware sprite index
-			ldx nextHardwareSprite
-			inx
-			cpx #8
-			bne _1
-			ldx #0
-_1:
-			stx nextHardwareSprite
-
 			; next virtual sprite index
 			inc nextVirtualSprite
 			ldx nextVirtualSprite
@@ -159,6 +155,11 @@ updateNextSprite:
 			ldy spriteOrder,x
 			ldx nextHardwareSprite
 
+			; TODO: sprite culling, check virtual sprite coordinates and go to _cull to cull sprite
+			;lda spritePositionY,y
+			;cmp #200
+			;bcs _cull
+
 			; set sprite image pointer			
 			lda spritePointers,y
 			sta SCREEN + VIC_SPRITE_POINTERS_OFFSET,x
@@ -187,6 +188,14 @@ _0:
 			sta VIC_SPRITE0_POSITION_X_LO,x			
 			lda spritePositionY,y
 			sta VIC_SPRITE0_POSITION_Y,x
+			
+			; advance to next hardware sprite
+			lda nextHardwareSprite
+			clc
+			adc #1
+			and #7
+			sta nextHardwareSprite
+_cull:
 			rts
 _mask:		.byte $fe, $fd, $fb, $f7, $ef, $df, $bf, $7f
 _bit:		.byte $01, $02, $04, $08, $10, $20, $40, $80
@@ -275,8 +284,8 @@ _noSwap:
 			bpl _0
 
 			; we are done when theres no swaps
-			lda _swaps
-			bne sortSprites
+			;lda _swaps
+			;bne sortSprites
 			rts
 _swaps:		.byte 0
 
