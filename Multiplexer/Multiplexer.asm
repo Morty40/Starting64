@@ -4,7 +4,7 @@
 			
 SCREEN 		= $0400
 
-SPRITE_COUNT = 10
+SPRITE_COUNT = 32
 
 			; BASIC start
 			@basicStart()
@@ -40,7 +40,7 @@ start:
 			cli
 			
 _loop:
-			jsr debugSprites
+			;jsr debugSprites
 			jmp _loop
 
 irq1:
@@ -48,7 +48,7 @@ irq1:
 			dec VIC_INTERRUPT_REGISTER
 			
 			; push registers to stack
-			inc $d020
+			;inc $d020
 			@pushAXY()
 
 			; setup virtual sprite positions and sort by y
@@ -91,7 +91,7 @@ _1:
 _2:
 			; pull registers from stack
 			@pullYXA()
-			dec $d020
+			;dec $d020
 			rti
 
 			.zpbyte "nextVirtualSprite"
@@ -103,7 +103,7 @@ irq2:
 			dec VIC_INTERRUPT_REGISTER
 			
 			; push registers to stack
-			dec $d020
+			;inc $d020
 			@pushAXY()
 _0:
 			jsr updateNextSprite
@@ -129,22 +129,15 @@ _2:
 			lda VIC_SPRITE0_POSITION_Y,x
 			clc
 			adc #VIC_SPRITE_HEIGHT
-			bcc _3
-			inx
-_3:
-		
-_busyWait:
-			cmp $d012
-			bcs _busyWait
-			jmp _0
-			
-			;bpl _0
-			;jsr setRasterCounter
 
+			cmp $d012
+			beq _0
+			bcc _0
+			sta $d012
 _end:
 			; pull registers from stack
 			@pullYXA()
-			inc $d020
+			;dec $d020
 			rti
 
 
