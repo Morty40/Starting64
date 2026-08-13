@@ -1,6 +1,6 @@
 ; Multiplexer.asm
 ; General purpose sprite multiplexer
-; (c) Morten Perriartd 2026
+; (c) Morten Perriard 2026
 			
 SCREEN 		= $0400
 
@@ -39,9 +39,8 @@ start:
 			@stax(INTERRUPT_VECTOR_IRQ)
 			cli
 			
-_loop:
-			;jsr debugSprites
-			jmp _loop
+			; loop
+			jmp _
 
 irq1:
 			; acknowledge interrupt
@@ -130,10 +129,10 @@ _2:
 			clc
 			adc #VIC_SPRITE_HEIGHT
 
-			cmp $d012
+			cmp VIC_RASTER_COUNTER
 			beq _0
 			bcc _0
-			sta $d012
+			sta VIC_RASTER_COUNTER
 _end:
 			; pull registers from stack
 			@pullYXA()
@@ -147,11 +146,6 @@ updateNextSprite:
 			ldx nextVirtualSprite
 			ldy spriteOrder,x
 			ldx nextHardwareSprite
-
-			; TODO: sprite culling, check virtual sprite coordinates and go to _cull to cull sprite
-			;lda spritePositionY,y
-			;cmp #200
-			;bcs _cull
 
 			; set sprite image pointer			
 			lda spritePointers,y
@@ -188,7 +182,6 @@ _0:
 			adc #1
 			and #7
 			sta nextHardwareSprite
-_cull:
 			rts
 _mask:		.byte $fe, $fd, $fb, $f7, $ef, $df, $bf, $7f
 _bit:		.byte $01, $02, $04, $08, $10, $20, $40, $80
@@ -209,16 +202,6 @@ setupSprites:
 			; enabled all sprites
 			lda #$ff
 			sta VIC_SPRITES_ENABLED
-			rts
-
-
-debugSprites:
-			ldx #SPRITE_COUNT-1
-_0:
-			lda spriteOrder,x
-			sta SCREEN+24*40,x
-			dex
-			bpl _0
 			rts
 
 
@@ -272,11 +255,12 @@ _0:
 			tya
 			sta spriteOrder+1,x
 			inc _swaps
+			; elements are in order when theres no swaps
 _noSwap:
 			dex
 			bpl _0
-
-			; we are done when theres no swaps
+			
+			; uncomment this to do another pass until 100% sorted
 			;lda _swaps
 			;bne sortSprites
 			rts
