@@ -1,6 +1,6 @@
 ; Font.asm
 ; Set a custom font
-; (c) Morten Perriartd 2026
+; (c) Morten Perriard 2026
 
 SCREEN_ADDRESS	= $0400
 FONT_ADDRESS	= $2000

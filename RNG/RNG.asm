@@ -1,6 +1,6 @@
 ; RNG.asm
 ; Pseudo random number generator
-; (c) Morten Perriartd 2026
+; (c) Morten Perriard 2026
 
 			; BASIC start
 			@basicStart()

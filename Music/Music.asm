@@ -1,6 +1,6 @@
 ; Music.asm
 ; Import music from .sid file and play
-; (c) Morten Perriartd 2026
+; (c) Morten Perriard 2026
 
 			; BASIC start
 			@basicStart()

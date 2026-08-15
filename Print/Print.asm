@@ -1,6 +1,6 @@
 ; Print.asm
 ; Use basic rom to print to screen
-; (c) Morten Perriartd 2026
+; (c) Morten Perriard 2026
 
 			; BASIC start
 			@basicStart()

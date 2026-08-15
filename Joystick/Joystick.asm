@@ -1,6 +1,6 @@
 ; Joystick.asm
 ; Read joystick input
-; (c) Morten Perriartd 2026
+; (c) Morten Perriard 2026
 
 			; BASIC start
 			@basicStart()

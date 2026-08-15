@@ -1,6 +1,6 @@
 ; BigScroll.asm
 ; Simple 8x8 char scroll, using char rom
-; (c) Morten Perriartd 2025
+; (c) Morten Perriard 2025
 
 			; BASIC start
 			@basicStart()
