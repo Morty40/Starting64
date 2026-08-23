@@ -60,7 +60,7 @@ _colors: 	.byte VIC_COLOR_RED, VIC_COLOR_WHITE, VIC_COLOR_RED, VIC_COLOR_WHITE
 _xpos:		.word 60, 90, 120, 150, 180, 210, 240, 270			 
 _ypos:		.byte 60, 80, 100, 120, 140, 160, 180, 200
  
-			.align 64
+			.align VIC_SPRITE_MEMORY_ALIGNMENT
 _image:		
 			.bits "111111111111111111111111"
 			.bits "1                      1"
