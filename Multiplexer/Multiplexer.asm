@@ -46,9 +46,8 @@ irq1:
 			; acknowledge interrupt
 			dec VIC_INTERRUPT_REGISTER
 			
-			; push registers to stack
-			;inc $d020
-			@pushAXY()
+			inc $d020
+			@storeRegisters(_restore)
 
 			; setup virtual sprite positions and sort by y
 			jsr moveSprites
@@ -88,9 +87,9 @@ _1:
 			@ldax(irq2)
 			@stax(INTERRUPT_VECTOR_IRQ)
 _2:
-			; pull registers from stack
-			@pullYXA()
-			;dec $d020
+
+_restore:	@restoreRegisters()
+			dec $d020
 			rti
 
 			.zpbyte "nextVirtualSprite"
@@ -101,9 +100,8 @@ irq2:
 			; acknowledge interrupt
 			dec VIC_INTERRUPT_REGISTER
 			
-			; push registers to stack
-			;inc $d020
-			@pushAXY()
+			inc $d020
+			@storeRegisters(_restore)
 _0:
 			jsr updateNextSprite
 			
@@ -134,9 +132,9 @@ _2:
 			bcc _0
 			sta VIC_RASTER_COUNTER
 _end:
-			; pull registers from stack
-			@pullYXA()
-			;dec $d020
+
+_restore:	@restoreRegisters()
+			dec $d020
 			rti
 
 
