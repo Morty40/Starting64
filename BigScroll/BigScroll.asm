@@ -38,11 +38,11 @@ start:
 
 irq1:
 			dec VIC_INTERRUPT_REGISTER ; acknowledge interrupt
-			@pushAXY()
+			@pushRegisters()
 
 			jsr bigScroll
 			
-			@pullYXA()
+			@pullRegisters()
 			rti
 
 BIG_SCROLL_SCREEN = $0400 + 5*VIC_CHAR_COLUMNS
