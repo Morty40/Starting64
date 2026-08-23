@@ -45,7 +45,7 @@ irq1:
 			dec VIC_INTERRUPT_REGISTER
 			
 			; push registers to stack
-			@pushAXY()
+			@pushRegisters()
 
 			; music play
 			inc VIC_BORDER_COLOR
@@ -53,7 +53,7 @@ irq1:
 			dec VIC_BORDER_COLOR
 						
 			; pull registers from stack
-			@pullYXA()
+			@pullRegisters()
 			rti
 
 ; set raster counter value, ($d012, and hi-bit $d011)
